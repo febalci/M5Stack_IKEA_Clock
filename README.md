@@ -62,5 +62,6 @@ timer (char, XX:XX): 00:00 to 99:99
 alarm (char, XX:XX): 00:00 to 23:59
 
 * This uses the MPU8668 accelerator version of M5Stack Fire (core). If your m%Stack has MPU9250 (Early version) or other, you need to change the accelerometer code.
-** Compiled with Arduino IDE 2.0
+
+* Compiled with Arduino IDE 2.0
 
