@@ -43,8 +43,8 @@ const char *m5ikea_topic = "m5ikea/command";
 const char *ntp_server_1st = "0.europe.pool.ntp.org";
 const char *ntp_server_2nd = "time.google.com";
 // User Info Needed!!!
-const long gmt_offset_sec = 3 * 3600; // Change here: GMT+3 for Istanbul
-const int daylight_offset_sec = 0;    // Change here: No DST for Istanbul
+const long gmt_offset_sec = 3 * 3600; // Istanbul
+const int daylight_offset_sec = 0;    // No DST for Istanbul
 
 // Acceleration sensor
 M5Timer Task_Timer;
@@ -577,6 +577,10 @@ typedef enum
   CNT_DOWN_TIMER_RINGING = 4,
 } count_down_timer_status_e;
 
+bool mqtt_timer_set = false;
+uint8_t mqtt_timer_min = 0;
+uint8_t mqtt_timer_sec = 0;
+
 void displayCountdownTimerScreen()
 {
   static count_down_timer_status_e e_cnt_timer_status = CNT_DOWN_TIMER_NOT_SET;
@@ -585,8 +589,18 @@ void displayCountdownTimerScreen()
   static uint32_t base_milli_time = 0;
   static uint32_t set_milli_time = 0;
   static boolean is_count_down = false;
-
   uint16_t bkground_color = M5.Lcd.color565(0, 180, 0);
+
+  if ((mqtt_timer_set) && (e_cnt_timer_status == CNT_DOWN_TIMER_NOT_SET)) {
+    Serial.println("MQTT Timer Set...");
+    timer_minute = mqtt_timer_min;
+    timer_second = mqtt_timer_sec;
+    e_cnt_timer_status = CNT_DOWN_TIMER_RUNNING;
+    M5.Lcd.fillScreen(bkground_color);
+    cl_blink_count.resetCount();
+    mqtt_timer_set = false; 
+  }
+
   if (is_state_changed == true)
   {
     M5.Lcd.fillScreen(bkground_color);
@@ -706,6 +720,7 @@ void displayCountdownTimerScreen()
       uint8_t disp_second = 0;
       static uint8_t pre_disp_minute = 0;
       static uint8_t pre_disp_second = 0;
+
       if (is_count_down == false)
       {
         is_count_down = true;
@@ -845,6 +860,10 @@ typedef enum
 } alarm_status_e;
 alarm_status_e e_alarm_status = ALARM_NOT_SET;
 
+bool mqtt_alarm_set = false;
+uint8_t mqtt_alarm_hour = 0;
+uint8_t mqtt_alarm_min = 0;
+
 void displayAlarmScreen()
 {
   static uint8_t alarm_hour = 0;
@@ -866,6 +885,16 @@ void displayAlarmScreen()
 
   // alarm icon
   drawAlarmIcon(55, LCD_ALARM_CLOCK_ICON_DISP_Y_POS);
+
+  if ((mqtt_alarm_set) && (e_alarm_status == ALARM_NOT_SET)) {
+      Serial.println("MQTT Alarm Set...");
+      alarm_hour = mqtt_alarm_hour;
+      alarm_minute = mqtt_alarm_min;
+      callback_alarm_slot_id = enableAlarm(alarm_hour, alarm_minute);
+      e_alarm_status = ALARM_RUNNING;
+      mqtt_alarm_set = false;
+      M5.Lcd.fillScreen(bkground_color);
+    }
 
   switch (e_alarm_status)
   {
@@ -1295,6 +1324,20 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
   if (doc["brightness"] != nullptr) BRIGHTNESS = doc["brightness"];
   if (doc["powersave"] != nullptr) POWERSAVE = doc["powersave"];
+  if (doc["timer"] != nullptr) {
+    int tempmin,tempsec;
+    sscanf(doc["timer"], "%d:%d", &tempmin, &tempsec);
+    mqtt_timer_min = tempmin;
+    mqtt_timer_sec = tempsec;
+    mqtt_timer_set = true;
+  }
+  if (doc["alarm"] != nullptr) {
+    int temphour,tempmin;
+    sscanf(doc["alarm"], "%d:%d", &temphour, &tempmin);    
+    mqtt_alarm_hour = temphour;
+    mqtt_alarm_min = tempmin;
+    mqtt_alarm_set = true;
+  }
 }
 
 void reconnect() {
@@ -1349,7 +1392,7 @@ void setup()
   if (!getLocalTime(&time_info))
   {
     M5.Lcd.fillScreen(TFT_RED);
-    delay(3000);
+    delay(5000);
   }
   //MQTT Connection
   client.setServer(mqtt_server, 1883);
