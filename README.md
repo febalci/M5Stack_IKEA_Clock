@@ -10,8 +10,7 @@ This project is a replication of IKEA Klockis Travel Clock on M5Stack:
 
 M5stack Version shows date and time, and when you roll it over 90 degrees it shows temperature, and roll it again there comes timer and roll one more time, there it is, the alarm setting page:
 
-<img src="images/IMG_3744.jpeg" width="150" height="150"><img src="images/IMG_3745.jpeg" width="150" height="150">
-<img src="images/IMG_3751.jpeg" width="150" height="150"><img src="images/IMG_3746.jpeg" width="150" height="150">
+<img src="images/1.jpg" width="200" height="150"><img src="images/2.jpg" width="200" height="150"><img src="images/3.jpg" width="200" height="150"><img src="images/4.jpg" width="200" height="150">
 
 ### 1. Clock / Date Page: 
 
